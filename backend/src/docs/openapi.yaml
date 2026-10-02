@@ -1,0 +1,672 @@
+openapi: 3.0.3
+info:
+    title: MyPets API
+    description: Полная спецификация API для управления пользователями и питомцами с использованием httpOnly cookies и RBAC.
+    version: 1.0.0
+servers:
+    - url: http://localhost/api/v1
+      description: Локальный сервер разработки
+
+components:
+    securitySchemes:
+        AccessTokenCookie:
+            type: apiKey
+            in: cookie
+            name: accessToken
+            description: Краткосрочный токен доступа. Устанавливается сервером автоматически как httpOnly cookie.
+        RefreshTokenCookie:
+            type: apiKey
+            in: cookie
+            name: refreshToken
+            description: Долгосрочный токен сессии. Устанавливается сервером автоматически как httpOnly cookie.
+
+    schemas:
+        PaginationMeta:
+            type: object
+            properties:
+                total: { type: integer, example: 25 }
+                page: { type: integer, example: 1 }
+                limit: { type: integer, example: 10 }
+                pages: { type: integer, example: 3 }
+
+        UserResponse:
+            type: object
+            properties:
+                id: { type: string, format: uuid }
+                email: { type: string, format: email }
+                firstName: { type: string }
+                lastName: { type: string, nullable: true }
+                role: { type: string, enum: [USER, ADMIN] }
+                createdAt: { type: string, format: date-time }
+                updatedAt: { type: string, format: date-time }
+
+        PetResponse:
+            type: object
+            properties:
+                id: { type: string, format: uuid }
+                name: { type: string }
+                type: { type: string }
+                breed: { type: string, nullable: true }
+                age: { type: integer }
+                ownerId: { type: string, format: uuid }
+                createdAt: { type: string, format: date-time }
+                updatedAt: { type: string, format: date-time }
+
+        LocationLogResponse:
+            type: object
+            description: Объект отметки о местоположении питомца
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                    example: "e34c9c1b-74f4-41d3-b248-15039f60cb55"
+                    description: Уникальный ID записи в БД. Для самой свежей точки из Redis может возвращаться строка 'cache-latest'.
+                latitude:
+                    type: number
+                    format: float
+                    example: 53.9006
+                    description: Широта
+                longitude:
+                    type: number
+                    format: float
+                    example: 27.5590
+                    description: Долгота
+                createdAt:
+                    type: string
+                    format: date-time
+                    example: "2026-09-16T10:28:00.000Z"
+                    description: Временная метка фиксации координат
+                petId:
+                    type: string
+                    format: uuid
+                    example: "d3b07384-d113-4956-aab6-e13769c0d111"
+                    description: ID питомца, к которому относятся координаты
+
+paths:
+    # ==========================================
+    # ИНТЕРФЕЙС АВТОРИЗАЦИИ И ПРОФИЛЯ (AUTH)
+    # ==========================================
+    /auth/login:
+        post:
+            summary: Вход в систему
+            tags: [Auth]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [email, password]
+                            properties:
+                                email: { type: string, format: email }
+                                password: { type: string }
+            responses:
+                200:
+                    description: Успешный вход. Токены пишутся в куки.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status: { type: string, example: success }
+                                    data:
+                                        type: object
+                                        properties:
+                                            user:
+                                                {
+                                                    $ref: "#/components/schemas/UserResponse",
+                                                }
+    /auth/register:
+        post:
+            summary: Регистрация
+            tags: [Auth]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [email, password, firstName, lastName]
+                            properties:
+                                email: { type: string, format: email }
+                                password: { type: string }
+                                firstName: { type: string }
+                                lastName: { type: string }
+            responses:
+                201:
+                    description: Успешная регистрация.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status: { type: string, example: success }
+                                    data:
+                                        type: object
+                                        properties:
+                                            user:
+                                                {
+                                                    $ref: "#/components/schemas/UserResponse",
+                                                }
+    /auth/refresh:
+        post:
+            summary: Обновление пары токенов
+            tags: [Auth]
+            security: [{ RefreshTokenCookie: [] }]
+            responses:
+                200:
+                    description: Токены успешно обновлены.
+    /auth/logout:
+        post:
+            summary: Выход из системы (Logout)
+            description: Удаляет сессию пользователя на сервере и очищает JWT-токены (`accessToken` и `refreshToken`) в cookie браузера.
+            tags: [Auth]
+            security: [{ RefreshTokenCookie: [] }]
+            responses:
+                200:
+                    description: Успешный выход из системы
+                    headers:
+                        Set-Cookie:
+                            schema:
+                                type: string
+                            description: Возвращает инструкции для браузера по очистке cookies (`accessToken=; Max-Age=0`, `refreshToken=; Max-Age=0`)
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: "success"
+                                    message:
+                                        type: string
+                                        example: "Успешный выход из системы"
+
+                500:
+                    description: Внутренняя ошибка сервера (ошибка БД при удалении токена и т.д.)
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: "error"
+                                    message:
+                                        type: string
+                                        example: "Что-то пошло не так"
+    /auth/me:
+        get:
+            summary: Получить личный профиль текущего пользователя
+            tags: [Auth]
+            security: [{ AccessTokenCookie: [] }]
+            responses:
+                200:
+                    description: Профиль со списком только id и name питомцев.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status: { type: string, example: success }
+                                    data:
+                                        type: object
+                                        properties:
+                                            user:
+                                                allOf:
+                                                    - $ref: "#/components/schemas/UserResponse"
+                                                    - type: object
+                                                      properties:
+                                                          pets:
+                                                              type: array
+                                                              items:
+                                                                  type: object
+                                                                  properties:
+                                                                      id:
+                                                                          {
+                                                                              type: string,
+                                                                              format: uuid,
+                                                                          }
+                                                                      name:
+                                                                          {
+                                                                              type: string,
+                                                                          }
+
+    # ==========================================
+    # КЛИЕНТСКИЙ ИНТЕРФЕЙС ПИТОМЦЕВ (PETS USER)
+    # ==========================================
+    /pets:
+        get:
+            summary: Получить список собственных питомцев (с пагинацией и фильтрами)
+            tags: [Pets (User)]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: page
+                  in: query
+                  schema: { type: integer, default: 1 }
+                - name: limit
+                  in: query
+                  schema: { type: integer, default: 10 }
+                - name: type
+                  in: query
+                  schema: { type: string }
+                - name: breed
+                  in: query
+                  schema: { type: string }
+            responses:
+                200:
+                    description: Список питомцев с пагинацией.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status: { type: string, example: success }
+                                    pagination:
+                                        {
+                                            $ref: "#/components/schemas/PaginationMeta",
+                                        }
+                                    data:
+                                        type: object
+                                        properties:
+                                            pets:
+                                                type: array
+                                                items:
+                                                    {
+                                                        $ref: "#/components/schemas/PetResponse",
+                                                    }
+        post:
+            summary: Создать (добавить) нового питомца для себя
+            tags: [Pets (User)]
+            security: [{ AccessTokenCookie: [] }]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [name, type, age]
+                            properties:
+                                name: { type: string }
+                                type: { type: string }
+                                breed: { type: string }
+                                age: { type: integer }
+            responses:
+                201:
+                    description: Питомец успешно добавлен.
+
+    /pets/{petId}:
+        get:
+            summary: Получить полные данные конкретного своего питомца
+            tags: [Pets (User)]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: petId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            responses:
+                200:
+                    description: Полная карточка питомца.
+        patch:
+            summary: Обновить данные своего питомца
+            tags: [Pets (User)]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: petId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name: { type: string }
+                                type: { type: string }
+                                breed: { type: string }
+                                age: { type: integer }
+            responses:
+                200:
+                    description: Данные питомца изменены.
+        delete:
+            summary: Удалить своего питомца
+            tags: [Pets (User)]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: petId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            responses:
+                204:
+                    description: Питомец успешно удален.
+    # ==========================================
+    # АДМИНИСТРАТИВНАЯ ПАНЕЛЬ (ADMIN)
+    # ==========================================
+    /admin/users:
+        get:
+            summary: "[ADMIN] Получить список всех пользователей системы"
+            tags: [Admin Panel - Users]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: page
+                  in: query
+                  schema: { type: integer, default: 1 }
+                - name: limit
+                  in: query
+                  schema: { type: integer, default: 10 }
+            responses:
+                200:
+                    description: Список всех пользователей.
+        post:
+            summary: "[ADMIN] Создать нового пользователя напрямую"
+            tags: [Admin Panel - Users]
+            security: [{ AccessTokenCookie: [] }]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [email, password, firstName]
+                            properties:
+                                email: { type: string, format: email }
+                                password: { type: string }
+                                firstName: { type: string }
+                                lastName: { type: string }
+                                role:
+                                    {
+                                        type: string,
+                                        enum: [USER, ADMIN],
+                                        default: USER,
+                                    }
+            responses:
+                201:
+                    description: Пользователь успешно создан админом.
+
+    /admin/users/{id}:
+        get:
+            summary: "[ADMIN] Просмотреть профиль любого конкретного пользователя"
+            tags: [Admin Panel - Users]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            responses:
+                200:
+                    description: Карточка пользователя.
+        patch:
+            summary: "[ADMIN] Редактировать профиль любого пользователя"
+            tags: [Admin Panel - Users]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email: { type: string, format: email }
+                                password: { type: string }
+                                firstName: { type: string }
+                                lastName: { type: string }
+                                role: { type: string, enum: [USER, ADMIN] }
+            responses:
+                200:
+                    description: Данные успешно обновлены.
+        delete:
+            summary: "[ADMIN] Полностью удалить конкретного пользователя"
+            tags: [Admin Panel - Users]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            responses:
+                204:
+                    description: Пользователь удален.
+
+    /admin/users/{userId}/revoke-tokens:
+        post:
+            summary: "[ADMIN] Мгновенно отозвать все рефреш-токены пользователя для бана"
+            tags: [Admin Panel - Users]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: userId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            responses:
+                200:
+                    description: Сессии пользователя успешно сброшены.
+
+    # --- Управление чужими питомцами со стороны админа ---
+    /admin/users/{userId}/pets:
+        get:
+            summary: "[ADMIN] Посмотреть список питомцев конкретного пользователя"
+            tags: [Admin Panel - Pets]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: userId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+                - name: page
+                  in: query
+                  schema: { type: integer, default: 1 }
+                - name: limit
+                  in: query
+                  schema: { type: integer, default: 10 }
+            responses:
+                200:
+                    description: Возвращает питомцев целевого юзера с пагинацией.
+        post:
+            summary: "[ADMIN] Создать нового питомца и привязать его к указанному пользователю"
+            tags: [Admin Panel - Pets]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: userId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [name, type, age]
+                            properties:
+                                name: { type: string }
+                                type: { type: string }
+                                breed: { type: string }
+                                age: { type: integer }
+            responses:
+                201:
+                    description: Питомец успешно добавлен в профиль пользователя.
+
+    /admin/users/{userId}/pets/{petId}:
+        get:
+            summary: "[ADMIN] Получить карточку конкретного питомца конкретного пользователя"
+            tags: [Admin Panel - Pets]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: userId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+                - name: petId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            responses:
+                200:
+                    description: Полная информация о питомце.
+        patch:
+            summary: "[ADMIN] Обновить данные питомца конкретного пользователя"
+            tags: [Admin Panel - Pets]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: userId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+                - name: petId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name: { type: string }
+                                type: { type: string }
+                                breed: { type: string }
+                                age: { type: integer }
+            responses:
+                200:
+                    description: Питомец успешно обновлен.
+        delete:
+            summary: "[ADMIN] Удалить питомца конкретного пользователя"
+            tags: [Admin Panel - Pets]
+            security: [{ AccessTokenCookie: [] }]
+            parameters:
+                - name: userId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+                - name: petId
+                  in: path
+                  required: true
+                  schema: { type: string, format: uuid }
+            responses:
+                204:
+                    description: Питомец успешно удален из базы данных.
+    # ==========================================
+    # ИНТЕРФЕЙС ГЕОЛОКАЦИИ И ТРЕКИНГА (LOCATIONS)
+    # ==========================================
+    /locations/tracker-data:
+        post:
+            summary: Прием координат от GPS-трекера (Спецификация устройства)
+            description: Публичный технический эндпоинт, вызываемый аппаратным трекером каждые 3 секунды. Запись кэшируется в Redis, транслируется онлайн в WebSockets, а в PostgreSQL сбрасывается контрольной отметкой раз в 5 минут.
+            tags: [Locations & Tracking]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [trackerId, latitude, longitude]
+                            properties:
+                                trackerId:
+                                    type: string
+                                    example: "TRACKER_MVP_001"
+                                    description: Уникальный строковый идентификатор, зашитый в GPS-модуль
+                                latitude:
+                                    type: number
+                                    format: float
+                                    minimum: -90
+                                    maximum: 90
+                                    example: 53.900612
+                                    description: Текущая широта питомца
+                                longitude:
+                                    type: number
+                                    format: float
+                                    minimum: -180
+                                    maximum: 180
+                                    example: 27.559034
+                                    description: Текущая долгота питомца
+            responses:
+                201:
+                    description: Данные успешно приняты, закэшированы и отправлены в WebSocket-комнату.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: "success"
+                                    message:
+                                        type: string
+                                        example: "Location data received and broadcasted"
+                404:
+                    description: Питомец с указанным ID трекера не зарегистрирован в системе.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: "fail"
+                                    message:
+                                        type: string
+                                        example: "Питомец с указанным ID трекера не найден"
+
+    /locations/pets/{petId}/history:
+        get:
+            summary: Получить суточную историю перемещений питомца
+            description: Возвращает хронологический список точек перемещения питомца за последние 24 часа. Данные включают разреженные контрольные отметки из PostgreSQL и самую свежую real-time точку из Redis.
+            tags: [Locations & Tracking]
+            security:
+                - AccessTokenCookie: []
+            parameters:
+                - name: petId
+                  in: path
+                  required: true
+                  description: Строковый UUID питомца, историю которого необходимо получить
+                  schema:
+                      type: string
+                      format: uuid
+                      example: "d3b07384-d113-4956-aab6-e13769c0d111"
+            responses:
+                200:
+                    description: Список точек перемещения успешно сформирован.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: "success"
+                                    count:
+                                        type: integer
+                                        example: 124
+                                        description: Общее количество возвращенных точек
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: "#/components/schemas/LocationLogResponse"
+                401:
+                    description: Пользователь не авторизован (отсутствует или невалиден accessToken в куках).
+                403:
+                    description: Доступ запрещен. Текущий пользователь не является владельцем данного питомца и не имеет роли ADMIN.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: "fail"
+                                    message:
+                                        type: string
+                                        example: "Доступ запрещен: вы не являетесь владельцем этого питомца"
+                404:
+                    description: Питомец с указанным UUID не найден в базе данных.

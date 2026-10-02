@@ -1,0 +1,21 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(40rem, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.centered {
+    text-align: center;
+    padding: 3rem;
+    color: #3b4b61;
+    font-size: 2rem;
+}
+
+.error {
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 1rem;
+    border-radius: 0.6rem;
+    border: 0.1rem solid #fee2e2;
+}

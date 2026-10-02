@@ -1,0 +1,83 @@
+services:
+    postgres:
+        image: postgres:16-alpine
+        container_name: mypets-db
+        restart: always
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            POSTGRES_DB: ${DB_NAME}
+        expose:
+            - "5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        networks:
+            - mypets-network
+
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        container_name: mypets-backend
+        restart: always
+        expose:
+            - "${PORT}"
+        environment:
+            DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?schema=public"
+            PORT: ${PORT}
+            ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+            JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+            JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+            NODE_ENV: production
+            REDIS_HOST: "redis"
+            REDIS_PORT: "6379"
+            REDIS_URL: "redis://redis:6379"
+            ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+            ADMIN_PASSWORD: ${ADMIN_PASSWORD:-password123}
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        command: sh -c "npx prisma migrate deploy && node prisma/seed.js && node src/app.js"
+        networks:
+            - mypets-network
+
+    redis:
+        image: redis:7-alpine
+        container_name: pet_tracker_redis
+        restart: always
+        expose:
+            - "6379"
+        volumes:
+            - redis_data:/data
+        networks:
+            - mypets-network
+
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        container_name: mypets-frontend
+        restart: always
+        ports:
+            - "80:80"
+        depends_on:
+            - backend
+        networks:
+            - mypets-network
+        profiles:
+            - fullstack
+
+volumes:
+    postgres_data:
+    redis_data:
+
+networks:
+    mypets-network:
+        driver: bridge

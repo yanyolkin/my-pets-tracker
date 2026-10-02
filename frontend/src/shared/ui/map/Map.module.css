@@ -1,0 +1,35 @@
+.mapWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+}
+
+.mapContainer {
+    width: 100%;
+    height: 100%;
+}
+
+.loader {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    background: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.4rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.roundedPawMarker {
+    background-color: #3b82f6 !important;
+    border: 3px solid #ffffff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    object-fit: contain !important;
+    padding: 4px !important;
+}

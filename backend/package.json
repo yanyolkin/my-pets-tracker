@@ -1,0 +1,33 @@
+{
+    "name": "api",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node src/app.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "dependencies": {
+        "@prisma/adapter-pg": "^7.10.0",
+        "@prisma/client": "^7.10.0",
+        "bcrypt": "^6.0.0",
+        "cookie": "^2.0.1",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.6",
+        "dotenv": "^17.4.2",
+        "express": "^5.2.1",
+        "ioredis": "^6.0.0",
+        "jsonwebtoken": "^9.0.3",
+        "node-cron": "^4.6.0",
+        "pg": "^8.23.0",
+        "socket.io": "^4.8.3",
+        "socket.io-client": "^4.8.3",
+        "swagger-ui-express": "^5.0.1",
+        "yamljs": "^0.3.0",
+        "zod": "^4.6.1",
+        "prisma": "^7.10.0"
+    }
+}

@@ -1,0 +1,72 @@
+services:
+    postgres:
+        image: postgres:16-alpine
+        container_name: mypets-db-dev
+        restart: always
+        environment:
+            POSTGRES_USER: ${DB_USER:-mypets_user}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:-mypets_password}
+            POSTGRES_DB: ${DB_NAME:-mypets_db}
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data_dev:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U ${DB_USER:-mypets_user} -d ${DB_NAME:-mypets_db}",
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        networks:
+            - mypets-dev-network
+
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        container_name: mypets-backend-dev
+        restart: always
+        ports:
+            - ${API_PORT}:${PORT}
+        environment:
+            DATABASE_URL: "postgresql://${DB_USER:-mypets_user}:${DB_PASSWORD:-mypets_password}@postgres:5432/${DB_NAME:-mypets_db}?schema=public"
+            PORT: ${PORT}
+            ALLOWED_ORIGINS: "http://localhost:5173"
+            JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-secret1}
+            JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-secret2}
+            NODE_ENV: development
+            REDIS_HOST: "redis"
+            REDIS_PORT: "6379"
+            REDIS_URL: "redis://redis:6379"
+            ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+            ADMIN_PASSWORD: ${ADMIN_PASSWORD:-password123}
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        command: sh -c "npx prisma migrate deploy && npx prisma db seed && node src/app.js"
+        networks:
+            - mypets-dev-network
+
+    redis:
+        image: redis:7-alpine
+        container_name: pet_tracker_redis_dev
+        restart: always
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis_data_dev:/data
+        networks:
+            - mypets-dev-network
+
+volumes:
+    postgres_data_dev:
+    redis_data_dev:
+
+networks:
+    mypets-dev-network:
+        driver: bridge

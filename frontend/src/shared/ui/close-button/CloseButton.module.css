@@ -1,0 +1,33 @@
+.button {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 2rem;
+    height: 2rem;
+    background: red;
+    border: .1rem solid red;
+    border-radius: 0.5rem;
+    transition: background 0.5s ease;
+    cursor: pointer;
+    span {
+        position: absolute;
+        width: 1.4rem;
+        height: 0.2rem;
+        background: white;
+        transition: background 0.5s ease;
+        &:first-child {
+            transform: rotate(45deg);
+        }
+        &:last-child {
+            transform: rotate(-45deg);
+        }
+    }
+
+    &:hover {
+        background: white;
+        span {
+            background: red;
+        }
+    }
+}

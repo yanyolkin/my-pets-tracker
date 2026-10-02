@@ -1,0 +1,19 @@
+.centeredMessage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+}
+
+.popupContent {
+    font-size: 1.4rem;
+    line-height: 1.8;
+}
+
+.timestamp {
+    display: block;
+    margin-top: 0.4rem;
+    color: #888;
+}

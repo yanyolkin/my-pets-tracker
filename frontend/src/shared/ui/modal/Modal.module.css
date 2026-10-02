@@ -1,0 +1,54 @@
+.dialog {
+    padding: 0;
+    margin: auto;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 0 2rem rgba(0, 0, 0, 0.3);
+    min-width: 50%;
+}
+
+.dialog[open]::backdrop{
+    background: rgba(0,0,0, 0.5);
+}
+
+.content {
+    position: relative;
+    padding: 4rem 1rem 1rem;
+    height: 100%;
+}
+
+.close {
+    position: absolute;
+    z-index: 2;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    border: 0.1rem solid black;
+    background: black;
+    border-radius: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.5s ease;
+    span {
+        position: absolute;
+        width: 1.4rem;
+        height: 0.2rem;
+        background: white;
+        transition: background 0.5s ease;
+        &:first-child {
+            transform: rotate(45deg);
+        }
+        &:last-child {
+            transform: rotate(-45deg);
+        }
+    }
+    &:hover {
+        background: white;
+        span {
+            background: black;
+        }
+    }
+}

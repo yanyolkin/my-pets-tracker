@@ -1,0 +1,27 @@
+.card {
+    display: flex;
+    padding: 1rem;
+    background: lightskyblue;
+    border-radius: 1rem;
+    box-shadow: 0 0 2rem rgba(0, 0, 0, 0.3);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.title {
+    font-size: 3rem;
+}
+
+.text {
+    font-size: 2rem;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}

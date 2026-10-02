@@ -1,0 +1,68 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+enum Role {
+    USER
+    ADMIN
+}
+
+model User {
+ id String @id @default(uuid())
+ email String @unique
+ password String
+ firstName String
+ lastName String?
+ role Role @default(USER)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ pets Pet[]
+ refreshTokens RefreshToken[]
+ 
+ @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique 
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Pet {
+  id          String        @id @default(uuid())
+  name        String
+  type        String
+  breed       String?
+  age         Int
+  trackerId   String?       @unique 
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  ownerId     String
+  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  coordinates LocationLog[]
+
+  @@index([ownerId])
+  @@index([trackerId]) 
+  @@map("pets")
+}
+
+model LocationLog {
+  id        String   @id @default(uuid())
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now()) 
+  petId     String
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, createdAt])
+  @@map("location_logs")
+}

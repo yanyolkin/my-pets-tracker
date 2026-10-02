@@ -1,0 +1,66 @@
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    width: 100%;
+}
+
+.label {
+    font-weight: 500;
+    color: #333;
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.input {
+    width: 100%;
+    padding: 1rem;
+    border: 0.1rem solid #ccc;
+    border-radius: 0.6rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.passwordInput {
+    padding-right: 2.5rem;
+}
+
+.input:focus {
+    border-color: black;
+}
+
+.hasError .input {
+    border-color: red;
+}
+
+.error {
+    color: red;
+    font-size: 1.4rem;
+}
+
+.eyeButton {
+    position: absolute;
+    right: 0.8rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.eyeButton:hover {
+    color: #212529;
+}
+
+.icon {
+    width: 2rem;
+    height: 2rem;
+}

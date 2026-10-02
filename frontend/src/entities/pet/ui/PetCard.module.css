@@ -1,0 +1,80 @@
+.card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 3rem 1rem 1rem;
+    border: 0.1rem solid white;
+    border-radius: 0.8rem;
+    background-color: white;
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.15);
+    transition:
+        transform 0.5s ease,
+        box-shadow 0.5s ease;
+}
+
+.card:hover {
+    transform: translateY(-0.2rem);
+    box-shadow: 0 0 3rem rgba(0, 0, 0, 0.4);
+}
+
+.avatarPlaceholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-size: 1.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex-grow: 1;
+}
+
+.name {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+.meta,
+.age {
+    font-size: 1.4rem;
+    color: #4a5568;
+}
+
+.trackerStatus {
+    font-size: 1.4rem;
+    color: #718096;
+}
+
+.active {
+    color: #38a169;
+    font-weight: 600;
+}
+
+.inactive {
+    color: #e53e3e;
+    font-weight: 600;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.close {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    z-index: 2;
+}

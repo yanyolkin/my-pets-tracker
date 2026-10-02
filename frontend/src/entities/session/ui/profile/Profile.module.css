@@ -1,0 +1,13 @@
+.title {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+}
+
+.email, .role {
+    margin-bottom: 1rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+}
