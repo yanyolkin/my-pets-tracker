@@ -2,10 +2,13 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    width: 50vw;
+    width: 70vw;
     padding: 2rem;
     background: yellow;
     border-radius: 1rem;
     box-shadow: 0 0 4rem rgba(0, 0, 0, 0.3);
+    @media (width<600px) {
+         width: 90vw;
+    }
 }
 

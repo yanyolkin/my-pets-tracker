@@ -3,11 +3,18 @@
     margin-bottom: 2rem;
 }
 
-.email, .role {
+.email,
+.role {
     margin-bottom: 1rem;
+    @media (width<390px) {
+        font-size: 1.4rem;
+    }
 }
 
 .actions {
     display: flex;
     gap: 1rem;
+    @media (width<390px) {
+        flex-direction: column;
+    }
 }
