@@ -192,3 +192,10 @@ _Все маршруты требуют успешной авторизации 
 ## Скачать десктопное приложение
 
 [Скачать трекер для Windows/macOS](https://github.com/yanyolkin/my-pets-tracker/releases/download/1.0.0/GPSTrackerSimulator.exe)
+
+## Демонстрация работы
+
+<p align="center">
+  <img src="assets/demo.gif" alt="Демонстрация работы трекера" width="700" />
+</p>
+
