@@ -28,7 +28,7 @@
 .secondary {
     background-color: #6c757d;
     color: white;
-     border: 0.1rem solid #6c757d;
+    border: 0.1rem solid #6c757d;
 }
 
 .secondary:not(:disabled):hover {

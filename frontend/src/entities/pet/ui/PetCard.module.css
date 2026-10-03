@@ -11,6 +11,10 @@
     transition:
         transform 0.5s ease,
         box-shadow 0.5s ease;
+    @media (width<390px) {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }
 
 .card:hover {
@@ -74,7 +78,7 @@
 
 .close {
     position: absolute;
-    top: .5rem;
-    right: .5rem;
+    top: 0.5rem;
+    right: 0.5rem;
     z-index: 2;
 }
