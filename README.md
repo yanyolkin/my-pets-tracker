@@ -1,5 +1,15 @@
 # 🐾 MyPets Full-Stack Platform
 
+<p align="center">
+  <img src="https://github.com/yanyolkin/my-pets-tracker/actions/workflows/frontend.yml/badge.svg" alt="Frontend CI Status" />
+  
+  <img src="https://github.com/yanyolkin/my-pets-tracker/actions/workflows/backend.yml/badge.svg" alt="Backend CI Status" />
+  
+  <img src="https://img.shields.io/badge/Deploy-Vercel-black?style=flat-square&logo=vercel" alt="Deployed to Vercel" />
+  
+  <img src="https://img.shields.io/badge/Deploy-Render-black?style=flat-square&logo=render&logoColor=cccccc" alt="Deployed to Render" />
+</p>
+
 Комплексная Full-Stack платформа для учета домашних животных, администрирования пользователей и высоконагруженного real-time трекинга питомцев.
 
 Проект построен на базе микросервисной архитектуры, объединяющей клиентское SPA-приложение, производительное API, реляционную СУБД, in-memory кэш и обратный прокси-сервер Nginx для оркестрации трафика.
@@ -199,3 +209,27 @@ _Все маршруты требуют успешной авторизации 
   <img src="assets/demo.gif" alt="Демонстрация работы трекера" width="700" />
 </p>
 
+---
+
+## 🔗 CI/CD & Deployment Архитектура
+
+В проекте реализована полностью изолированная конвейерная обработка изменений (CI/CD) на базе **GitHub Actions**, оптимизирующая деплой на облачные платформы **Vercel** (Frontend) и **Render** (Backend).
+
+### 1. Непрерывная интеграция (GitHub Actions)
+
+Скрипты автоматизации разделены по зонам ответственности с помощью строгих фильтров путей (`paths`), что предотвращает лишний запуск тестов и экономит билд-минуты:
+
+- **Backend CI (`backend.yml`):** Запускается автоматически при создании Pull Request в ветку `main`, если изменения затронули папку `backend/**`.
+    1. Разворачивает Node.js v20 и кэширует зависимости (`npm cache`) на основе `backend/package-lock.json`.
+    2. Выполняет чистую установку через `npm ci`.
+    3. Тестирует безопасность и корректность схемы базы данных, генерируя Prisma Client (`npx prisma generate`) в изолированном окружении с использованием mock-строки подключения.
+- **Frontend CI (`frontend.yml`):** Запускается при Pull Request в ветку `main`, содержащих изменения в папке `frontend/**`.
+    1. Настраивает Node.js v20 и проверяет кэш зависимостей фронтенда.
+    2. Запускает строгую валидацию типов TypeScript (`npx tsc --noEmit`).
+    3. Прогоняет автоматические юнит-тесты компонентов (`npm run test:ci`).
+    4. Проверяет проект на наличие синтаксических и логических ошибок сборки (`npm run build`) перед отправкой в продакшен.
+
+### 2. Автоматический деплой (Continuous Delivery)
+
+- **Клиентское приложение (Frontend):** Развернуто на **Vercel**. Настроен инструмент оптимизации _Ignored Build Step_ со встроенной валидацией пути `git diff HEAD^ HEAD --quiet -- ./frontend`. Vercel полностью игнорирует пуши и мерджи, затрагивающие только бэкенд или корневые файлы (`README.md`, папка `assets/`), предотвращая ложные пересборки.
+- **Серверная часть (Backend):** Развернута на платформе **Render**. В настройках веб-службы параметр **Root Directory** установлен в значение `backend`. Благодаря этому встроенный триггер автодеплоя Render (`Auto-Deploy`) активируется и пересобирает проект исключительно тогда, когда зафиксированы изменения в файлах внутри папки `backend/**`. Все пуши во фронтенд или правки корневой документации Render игнорирует, сохраняя лимиты бесплатных билд-минут.
