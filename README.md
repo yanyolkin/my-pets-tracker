@@ -2,17 +2,29 @@
 
 <p align="center">
   <img src="https://github.com/yanyolkin/my-pets-tracker/actions/workflows/frontend.yml/badge.svg" alt="Frontend CI Status" />
-  
   <img src="https://github.com/yanyolkin/my-pets-tracker/actions/workflows/backend.yml/badge.svg" alt="Backend CI Status" />
-  
-  <img src="https://img.shields.io/badge/Deploy-Vercel-black?style=flat-square&logo=vercel" alt="Deployed to Vercel" />
-  
-  <img src="https://img.shields.io/badge/Deploy-Render-black?style=flat-square&logo=render&logoColor=cccccc" alt="Deployed to Render" />
+  <a href="https://my-pets-frontend-mu.vercel.app" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Deploy-Vercel-black?style=flat-square&logo=vercel" alt="Deployed to Vercel" />
+  </a>
+  <a href="https://my-pets-backend.onrender.com" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Deploy-Render-black?style=flat-square&logo=render&logoColor=cccccc" alt="Deployed to Render" />
+  </a>
+  <a href="https://my-pets-backend.onrender.com/api/v1/api-docs" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/API_Docs-OpenAPI-black?style=flat-square&logo=openapi%2Dinitiative&logoColor=white" alt="OpenAPI Documentation" />
+  </a>
 </p>
 
 Комплексная Full-Stack платформа для учета домашних животных, администрирования пользователей и высоконагруженного real-time трекинга питомцев.
 
 Проект построен на базе микросервисной архитектуры, объединяющей клиентское SPA-приложение, производительное API, реляционную СУБД, in-memory кэш и обратный прокси-сервер Nginx для оркестрации трафика.
+
+---
+
+## Демонстрация работы
+
+<p align="center">
+  <img src="assets/demo.gif" alt="Демонстрация работы трекера" width="700" />
+</p>
 
 ---
 
@@ -202,14 +214,6 @@ _Все маршруты требуют успешной авторизации 
 ## Скачать десктопное приложение
 
 [Скачать трекер для Windows/macOS](https://github.com/yanyolkin/my-pets-tracker/releases/download/1.0.0/GPSTrackerSimulator.exe)
-
-## Демонстрация работы
-
-<p align="center">
-  <img src="assets/demo.gif" alt="Демонстрация работы трекера" width="700" />
-</p>
-
----
 
 ## 🔗 CI/CD & Deployment Архитектура
 
