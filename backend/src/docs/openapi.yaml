@@ -4,8 +4,8 @@ info:
     description: Полная спецификация API для управления пользователями и питомцами с использованием httpOnly cookies и RBAC.
     version: 1.0.0
 servers:
-    - url: http://localhost/api/v1
-      description: Локальный сервер разработки
+    - url: https://my-pets-backend.onrender.com/api/v1
+      description: Сервер разработки
 
 components:
     securitySchemes:
