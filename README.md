@@ -3,14 +3,17 @@
 <p align="center">
   <img src="https://github.com/yanyolkin/my-pets-tracker/actions/workflows/frontend.yml/badge.svg" alt="Frontend CI Status" />
   <img src="https://github.com/yanyolkin/my-pets-tracker/actions/workflows/backend.yml/badge.svg" alt="Backend CI Status" />
-  <a href="https://my-pets-frontend-mu.vercel.app" target="_blank" rel="noopener noreferrer">
+  <a href="https://my-pets-frontend-mu.vercel.app">
     <img src="https://img.shields.io/badge/Deploy-Vercel-black?style=flat-square&logo=vercel" alt="Deployed to Vercel" />
   </a>
-  <a href="https://my-pets-backend.onrender.com" target="_blank" rel="noopener noreferrer">
+  <a href="https://my-pets-backend.onrender.com">
     <img src="https://img.shields.io/badge/Deploy-Render-black?style=flat-square&logo=render&logoColor=cccccc" alt="Deployed to Render" />
   </a>
-  <a href="https://my-pets-backend.onrender.com/api/v1/api-docs" target="_blank" rel="noopener noreferrer">
+  <a href="https://my-pets-backend.onrender.com/api/v1/api-docs">
     <img src="https://img.shields.io/badge/API_Docs-OpenAPI-black?style=flat-square&logo=openapi%2Dinitiative&logoColor=white" alt="OpenAPI Documentation" />
+  </a>
+  <a href="https://github.com/yanyolkin/my-pets-tracker/releases/download/1.0.0/GPSTrackerSimulator.exe">
+    <img src="https://img.shields.io/badge/Download-Windows_App-0078D4?style=flat-square&logo=windows&logoColor=white" alt="Download Simulator for Windows" />
   </a>
 </p>
 
@@ -25,6 +28,20 @@
 <p align="center">
   <img src="assets/demo.gif" alt="Демонстрация работы трекера" width="700" />
 </p>
+
+---
+
+### 🛰️ Инструкция по тестированию (Симулятор трекера)
+
+В репозитории доступно десктопное приложение, которое имитирует работу реального GPS-ошейника. С его помощью можно протестировать систему без наличия физического трекера.
+
+1. **Скачайте симулятор:** Кликните по синему бейджу `Download Windows App` выше (вы автоматически перейдете к скачиванию последней собранной версии приложения).
+2. **Запустите приложение** на вашем компьютере.
+3. **Укажите адрес сервера:** В поле ввода URL внутри интерфейса симулятора вставьте адрес нашего бэкенда на Render:
+    ```text
+    https://my-pets-backend.onrender.com
+    ```
+4. **Запустите симуляцию:** После отправки тестовых координат откройте веб-версию приложения на Vercel — вы увидите, как маркер питомца перемещается по карте в реальном времени.
 
 ---
 
@@ -210,10 +227,6 @@ _Все маршруты требуют успешной авторизации 
 ### 5. Техническая документация (OpenAPI / Swagger)
 
 - `GET /api-docs` — Интерактивная документация всего API (Swagger UI). Позволяет просматривать схемы Zod-валидации, тестировать эндпоинты в реальном времени и сверять структуру ответов сервера.
-
-## Скачать десктопное приложение
-
-[Скачать трекер для Windows/macOS](https://github.com/yanyolkin/my-pets-tracker/releases/download/1.0.0/GPSTrackerSimulator.exe)
 
 ## 🔗 CI/CD & Deployment Архитектура
 
